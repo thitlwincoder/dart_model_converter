@@ -1,16 +1,22 @@
 # dart_model_converter
 
-A new Flutter project.
+[![License](https://img.shields.io/github/license/thitlwincoder/dart_model_converter?logo=open-source-initiative&logoColor=green)](https://github.com/thitlwincoder/dart_model_converter/blob/master/LICENSE)
+[![Uploaded By](https://img.shields.io/badge/uploaded%20by-thitlwincoder-blue)](https://github.com/thitlwincoder)
 
-## Getting Started
+<img src="screenshot.png" alt="screenshot" width="500"/>
 
-This project is a starting point for a Flutter application.
+## Support Classes
 
-A few resources to get you started if this is your first Flutter project:
+- Dart Class
+- JsonSerializable
+- Freezed
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Usage
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Try [dart_model_converter](https://thitlwincoder.github.io/dart_model_converter/) in your browser.
+
+## Contribution
+
+Feel free to file an [issue](https://github.com/thitlwincoder/dart_model_converter/issues/new) if you find a problem or make pull requests.
+
+All contributions are welcome :)

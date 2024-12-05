@@ -20,6 +20,7 @@ dependencies:
   change_case: ^2.1.0
   flutter_highlight: ^0.7.0
   highlight: ^0.7.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   very_good_analysis: ^6.0.0
