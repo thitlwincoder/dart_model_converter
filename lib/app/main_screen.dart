@@ -12,7 +12,10 @@ import 'package:highlight/languages/dart.dart';
 import 'package:tabler_icons/tabler_icons.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-enum CodeType { freezed, jsonSerializable }
+enum CodeType {
+  freezed,
+  jsonSerializable;
+}
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -34,9 +37,8 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void initState() {
     super.initState();
-    controller = CodeController(
-      language: dart,
-      text: '''
+
+    input = '''
 class Welcome {
     final String greeting;
     final List<String> instructions;
@@ -56,9 +58,14 @@ class Welcome {
         "instructions": List<dynamic>.from(instructions.map((x) => x)),
     };
 }
-''',
+''';
+
+    controller = CodeController(
+      language: dart,
+      text: input,
     );
     outputController = CodeController(language: dart);
+    convert(input);
   }
 
   @override
@@ -347,15 +354,18 @@ class Welcome {
           }
         }
 
-        final obj = Generator(
+        final generator = Generator(
           type: type,
           name: '${declaration.name}',
           optionalParameters: optionalParameters,
           requiredParameters: requiredParameters,
         ).gen();
 
+        final formatter =
+            DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
+
         outputController.fullText =
-            DartFormatter().format('${obj.accept(emitter)}');
+            formatter.format('${generator.accept(emitter)}');
         // setState(() {});
       }
     }
@@ -369,7 +379,8 @@ class Welcome {
   }
 
   void onFormatCode() {
-    final formatter = DartFormatter();
+    final formatter =
+        DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
     final formattedCode = formatter.format(input);
 
     controller.text = formattedCode;
