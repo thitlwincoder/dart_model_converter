@@ -2,43 +2,42 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_model_converter/app/generators/generator.dart';
+import 'package:dart_model_converter/app/providers/config_provider.dart';
 import 'package:dart_style/dart_style.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_code_editor/flutter_code_editor.dart' hide Code;
-import 'package:flutter_highlight/themes/atom-one-dark-reasonable.dart';
-import 'package:highlight/languages/dart.dart';
-import 'package:tabler_icons/tabler_icons.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:re_editor/re_editor.dart';
+import 'package:re_highlight/languages/dart.dart';
+import 'package:re_highlight/styles/atom-one-dark.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:shadcn_flutter/shadcn_flutter_extension.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-enum CodeType {
-  freezed,
-  jsonSerializable;
-}
+enum CodeType { freezed, jsonSerializable }
 
-class MainScreen extends StatefulWidget {
+class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
 
   @override
-  State<MainScreen> createState() => _MainScreenState();
+  ConsumerState<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
-  late CodeController controller;
-  late CodeController outputController;
+class _MainScreenState extends ConsumerState<MainScreen> {
+  late CodeLineEditingController inputController;
+  late CodeLineEditingController outputController;
 
-  bool isWrap = false;
-  bool showOption = false;
-  CodeType type = CodeType.freezed;
-
-  String input = '';
+  CodeEditorStyle style = CodeEditorStyle(
+    fontSize: 16,
+    codeTheme: CodeHighlightTheme(
+      theme: atomOneDarkTheme,
+      languages: {'dart': CodeHighlightThemeMode(mode: langDart)},
+    ),
+  );
 
   @override
   void initState() {
     super.initState();
 
-    input = '''
+    const input = '''
 class Welcome {
     final String greeting;
     final List<String> instructions;
@@ -60,250 +59,111 @@ class Welcome {
 }
 ''';
 
-    controller = CodeController(
-      language: dart,
-      text: input,
-    );
-    outputController = CodeController(language: dart);
-    convert(input);
+    inputController = CodeLineEditingController.fromText(input);
+    outputController = CodeLineEditingController.fromText(input);
+
+    convert();
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    inputController.dispose();
+    outputController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        elevation: 4,
-        centerTitle: false,
-        title: Text('Dart Model Converter'),
-        titleTextStyle: Theme.of(context)
-            .typography
-            .dense
-            .titleMedium
-            ?.copyWith(color: Colors.white),
-        backgroundColor: Theme.of(context).primaryColor,
-        actions: [
-          CupertinoButton(
-            onPressed: () {
-              launchUrlString(
-                'https://github.com/thitlwincoder/dart_model_converter',
-              );
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  TablerIcons.brand_github,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'Open on Github',
-                  style: Theme.of(context)
-                      .typography
-                      .dense
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-              ],
+    ref.listen(configProviderProvider, (previous, next) => convert());
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isMobile = constraints.maxWidth < 800;
+        final minSize =
+            (isMobile ? constraints.maxHeight : constraints.maxWidth) / 2.5;
+
+        return Scaffold(
+          backgroundColor: Color(0xFF282C34),
+          headers: [
+            Padding(
+              padding: const EdgeInsets.all(8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Dart Model Converter',
+                    style: isMobile
+                        ? context.theme.typography.semiBold
+                        : context.theme.typography.h4,
+                  ),
+                  Row(
+                    spacing: isMobile ? 2 : 20,
+                    children: [
+                      GhostButton(
+                        onPressed: onFormatCodeTap,
+                        density: ButtonDensity.dense,
+                        leading: isMobile
+                            ? null
+                            : Icon(RadixIcons.textAlignCenter),
+                        child: Text('Format Code'),
+                      ),
+                      GhostButton(
+                        onPressed: onOpenOnGithubTap,
+                        density: ButtonDensity.dense,
+                        leading: isMobile ? null : Icon(BootstrapIcons.github),
+                        child: Text('Open on Github'),
+                      ),
+                      Builder(
+                        builder: (context) {
+                          return GhostButton(
+                            density: ButtonDensity.dense,
+                            onPressed: () => onOptionTap(context),
+                            leading: isMobile
+                                ? null
+                                : Icon(RadixIcons.hamburgerMenu),
+                            child: Text('Options'),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          CupertinoButton(
-            onPressed: () {
-              showOption = !showOption;
-              setState(() {});
-            },
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  showOption ? TablerIcons.eye_off : TablerIcons.eye,
-                  color: Colors.white,
-                  size: 20,
-                ),
-                SizedBox(width: 4),
-                Text(
-                  'Options',
-                  style: Theme.of(context)
-                      .typography
-                      .dense
-                      .bodyMedium
-                      ?.copyWith(color: Colors.white),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-      backgroundColor: Color.fromARGB(255, 21, 54, 79),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          return Stack(
+          ],
+          child: ResizablePanel(
+            direction: isMobile ? Axis.vertical : Axis.horizontal,
             children: [
-              Padding(
-                padding: const EdgeInsets.all(10),
-                child: Flex(
-                  direction: constraints.maxWidth < 800
-                      ? Axis.vertical
-                      : Axis.horizontal,
-                  children: [
-                    SizedBox(
-                      width: constraints.maxWidth < 800 ? null : 500,
-                      height: constraints.maxWidth < 800 ? 240 : null,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          OutlinedButton(
-                            onPressed: onFormatCode,
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: BorderSide(color: Colors.white),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            child: Text('Format Code'),
-                          ),
-                          SizedBox(height: 10),
-                          Expanded(
-                            child: CodeTheme(
-                              data: CodeThemeData(
-                                styles: atomOneDarkReasonableTheme,
-                              ),
-                              child: CodeField(
-                                wrap: isWrap,
-                                onChanged: onChanged,
-                                expands: true,
-                                controller: controller,
-                                cursorColor: Colors.orange,
-                                gutterStyle: GutterStyle(
-                                  margin: 0,
-                                  showLineNumbers: false,
-                                  showFoldingHandles: false,
-                                ),
-                                background:
-                                    const Color.fromARGB(255, 19, 41, 59),
-                                textStyle: Theme.of(context)
-                                    .typography
-                                    .white
-                                    .bodySmall,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (constraints.maxWidth < 800)
-                      SizedBox(height: 10)
-                    else
-                      SizedBox(width: 10),
-                    Expanded(
-                      child: SizedBox(
-                        width: constraints.maxWidth < 800 ? null : 500,
-                        height: constraints.maxWidth < 800 ? 240 : null,
-                        child: CodeTheme(
-                          data:
-                              CodeThemeData(styles: atomOneDarkReasonableTheme),
-                          child: CodeField(
-                            wrap: isWrap,
-                            expands: true,
-                            readOnly: true,
-                            controller: outputController,
-                            gutterStyle: GutterStyle(
-                              margin: 0,
-                              showLineNumbers: false,
-                              showFoldingHandles: false,
-                            ),
-                            background: const Color.fromARGB(255, 18, 36, 52),
-                            textStyle:
-                                Theme.of(context).typography.white.bodySmall,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+              ResizablePane.flex(
+                minSize: minSize,
+                child: CodeEditor(
+                  style: style,
+                  padding: EdgeInsets.all(20),
+                  controller: inputController,
+                  onChanged: (_) => convert(),
                 ),
               ),
-              if (!showOption)
-                SizedBox()
-              else
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Card(
-                    elevation: 4,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                    child: SizedBox(
-                      width: 200,
-                      child: Padding(
-                        padding: const EdgeInsets.all(10),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            DropdownButtonHideUnderline(
-                              child: DropdownButtonFormField(
-                                isExpanded: true,
-                                value: type,
-                                style: Theme.of(context)
-                                    .typography
-                                    .black
-                                    .bodyMedium,
-                                decoration: InputDecoration(
-                                  isDense: true,
-                                  contentPadding: EdgeInsets.all(8),
-                                  border: OutlineInputBorder(),
-                                  focusedBorder: OutlineInputBorder(),
-                                ),
-                                items: CodeType.values.map((e) {
-                                  return DropdownMenuItem(
-                                    value: e,
-                                    child: Text(e.name),
-                                  );
-                                }).toList(),
-                                onChanged: (value) {
-                                  type = value!;
-                                  setState(() {});
-
-                                  convert(input);
-                                },
-                              ),
-                            ),
-                            SizedBox(height: 10),
-                            OutlinedButton(
-                              onPressed: onCopyCode,
-                              style: OutlinedButton.styleFrom(
-                                elevation: 2,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                              ),
-                              child: Center(child: Text('Copy Code')),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
+              ResizablePane.flex(
+                minSize: minSize,
+                child: CodeEditor(
+                  style: style,
+                  readOnly: true,
+                  padding: EdgeInsets.all(20),
+                  showCursorWhenReadOnly: false,
+                  controller: outputController,
                 ),
+              ),
             ],
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
-  void convert(String text) {
+  void convert() {
     final emitter = DartEmitter();
 
-    final result = parseString(content: text);
+    final result = parseString(content: inputController.text.trim());
     final unit = result.unit;
 
     final optionalParameters = <Parameter>[];
@@ -341,8 +201,9 @@ class Welcome {
                   ..named = param.isNamed
                   ..type = Reference(parameters[name])
                   ..required = param.isRequiredNamed
-                  ..defaultTo =
-                      defaultValue == null ? null : Code(defaultValue),
+                  ..defaultTo = defaultValue == null
+                      ? null
+                      : Code(defaultValue),
               );
 
               if (param.isNamed) {
@@ -355,43 +216,55 @@ class Welcome {
         }
 
         final generator = Generator(
-          type: type,
           name: '${declaration.name}',
           optionalParameters: optionalParameters,
           requiredParameters: requiredParameters,
+          type: ref.read(configProviderProvider).type,
         ).gen();
 
-        final formatter =
-            DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
+        final formatter = DartFormatter(
+          languageVersion: DartFormatter.latestLanguageVersion,
+        );
 
-        outputController.fullText =
-            formatter.format('${generator.accept(emitter)}');
-        // setState(() {});
+        outputController.text = formatter.format(
+          '${generator.accept(emitter)}',
+        );
+        setState(() {});
       }
     }
   }
 
-  void onChanged(String text) {
-    input = text;
+  void onFormatCodeTap() {
+    final formatter = DartFormatter(
+      languageVersion: DartFormatter.latestLanguageVersion,
+    );
+    final formattedCode = formatter.format(inputController.text.trim());
+    inputController.text = formattedCode;
     setState(() {});
-
-    convert(text);
   }
 
-  void onFormatCode() {
-    final formatter =
-        DartFormatter(languageVersion: DartFormatter.latestLanguageVersion);
-    final formattedCode = formatter.format(input);
-
-    controller.text = formattedCode;
+  void onOptionTap(BuildContext context) {
+    showDropdown<void>(
+      context: context,
+      builder: (context) {
+        return DropdownMenu(
+          children: [
+            MenuRadioGroup(
+              value: ref.read(configProviderProvider).type,
+              onChanged: (context, value) {
+                ref.read(configProviderProvider.notifier).type(value);
+              },
+              children: CodeType.values.map((e) {
+                return MenuRadio(value: e, child: Text(e.name));
+              }).toList(),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  void onCopyCode() {
-    Clipboard.setData(ClipboardData(text: outputController.fullText)).then((_) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Copied to clipboard!')),
-      );
-    });
+  void onOpenOnGithubTap() {
+    launchUrlString('https://github.com/thitlwincoder/dart_model_converter');
   }
 }
