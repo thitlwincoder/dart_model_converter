@@ -1,34 +1,16 @@
+import 'package:change_case/change_case.dart';
 import 'package:code_builder/code_builder.dart';
-import 'package:dart_model_converter/app/generators/freezed_generator.dart';
-import 'package:dart_model_converter/app/generators/json_serializable_generator.dart';
 import 'package:dart_model_converter/app/main_screen.dart';
 
-class Generator {
-  Generator({
-    required this.name,
-    required this.type,
-    required this.optionalParameters,
-    required this.requiredParameters,
-  });
+part '_generator.dart';
 
-  final String name;
-  final CodeType type;
-  final List<Parameter> optionalParameters;
-  final List<Parameter> requiredParameters;
+abstract class Generator {
+  factory Generator({
+    required String name,
+    required CodeType type,
+    required List<Parameter> optionalParameters,
+    required List<Parameter> requiredParameters,
+  }) = _Generator;
 
-  Class gen() {
-    if (type == CodeType.freezed) {
-      return FreezedGenerator(
-        name: name,
-        optionalParameters: optionalParameters,
-        requiredParameters: requiredParameters,
-      ).gen();
-    }
-
-    return JsonSerializableGenerator(
-      name: name,
-      optionalParameters: optionalParameters,
-      requiredParameters: requiredParameters,
-    ).gen();
-  }
+  String generate();
 }

@@ -2,6 +2,7 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_model_converter/app/generators/generator.dart';
+import 'package:dart_model_converter/app/parsers/detector.dart';
 import 'package:dart_model_converter/app/providers/config_provider.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -12,7 +13,15 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:shadcn_flutter/shadcn_flutter_extension.dart';
 import 'package:url_launcher/url_launcher_string.dart';
 
-enum CodeType { freezed, jsonSerializable }
+enum CodeType {
+  normal,
+  freezed,
+  jsonSerializable;
+
+  bool get isNormal => this == normal;
+  bool get isFreezed => this == freezed;
+  bool get isJsonSerializable => this == jsonSerializable;
+}
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -33,31 +42,67 @@ class _MainScreenState extends ConsumerState<MainScreen> {
     ),
   );
 
+  String normalInput = '''
+    class Welcome {
+        final String greeting;
+        final List<String> instructions;
+
+        Welcome({
+            required this.greeting,
+            required this.instructions,
+        });
+
+        factory Welcome.fromJson(Map<String, dynamic> json) => Welcome(
+            greeting: json["greeting"],
+            instructions: List<String>.from(json["instructions"].map((x) => x)),
+        );
+
+        Map<String, dynamic> toJson() => {
+            "greeting": greeting,
+            "instructions": List<dynamic>.from(instructions.map((x) => x)),
+        };
+    }
+    ''';
+
+  String freezedInput = r'''
+part 'welcome.freezed.dart';
+part 'welcome.g.dart';
+
+@freezed
+class Welcome with _$Welcome {
+  const factory Welcome({
+    required String greeting,
+    required List<String> instructions,
+  }) = _Welcome;
+
+  factory Welcome.fromJson(Map<String, dynamic> json) =>
+      _$WelcomeFromJson(json);
+}
+''';
+
+  String jsonInput = r'''
+part 'welcome.g.dart';
+
+@JsonSerializable()
+class Welcome {
+  Welcome({required this.greeting, required this.instructions});
+
+  factory Welcome.fromJson(Map<String, dynamic> json) =>
+      _$WelcomeFromJson(json);
+
+  final String greeting;
+
+  final List<String> instructions;
+
+  Map<String, dynamic> toJson() => _$WelcomeToJson(this);
+}
+''';
+
   @override
   void initState() {
     super.initState();
 
-    const input = '''
-class Welcome {
-    final String greeting;
-    final List<String> instructions;
-
-    Welcome({
-        required this.greeting,
-        required this.instructions,
-    });
-
-    factory Welcome.fromJson(Map<String, dynamic> json) => Welcome(
-        greeting: json["greeting"],
-        instructions: List<String>.from(json["instructions"].map((x) => x)),
-    );
-
-    Map<String, dynamic> toJson() => {
-        "greeting": greeting,
-        "instructions": List<dynamic>.from(instructions.map((x) => x)),
-    };
-}
-''';
+    final input = normalInput;
 
     inputController = CodeLineEditingController.fromText(input);
     outputController = CodeLineEditingController.fromText(input);
@@ -161,9 +206,11 @@ class Welcome {
   }
 
   void convert() {
-    final emitter = DartEmitter();
+    final content = inputController.text.trim();
 
-    final result = parseString(content: inputController.text.trim());
+    final currentType = Detector().detect(content);
+
+    final result = parseString(content: content);
     final unit = result.unit;
 
     final optionalParameters = <Parameter>[];
@@ -173,26 +220,37 @@ class Welcome {
 
     for (final declaration in unit.declarations) {
       if (declaration is ClassDeclaration) {
-        for (final member in declaration.members) {
-          if (member is FieldDeclaration) {
-            for (final variable in member.fields.variables) {
-              final name = variable.name;
-              final type = member.fields.type;
+        final fields = declaration.members.whereType<FieldDeclaration>();
+        for (final member in fields) {
+          for (final variable in member.fields.variables) {
+            final name = variable.name;
+            final type = member.fields.type;
 
-              parameters['$name'] = '$type';
-            }
+            parameters['$name'] = '$type';
           }
+        }
 
+        for (final member in declaration.members) {
           if (member is ConstructorDeclaration) {
+            final name = '${member.name}';
+            if (name != 'null') continue;
+
             for (final param in member.parameters.parameters) {
               final name = '${param.name}';
 
-              if (!parameters.containsKey(name)) continue;
+              if (!parameters.containsKey(name) && currentType.isNormal) {
+                continue;
+              }
 
               String? defaultValue;
 
               if (param is DefaultFormalParameter) {
                 defaultValue = param.defaultValue?.toSource();
+
+                if (!parameters.containsKey(name)) {
+                  parameters[name] =
+                      '${param.parameter.childEntities.elementAt(param.isRequired ? 1 : 0)}';
+                }
               }
 
               final parameter = Parameter(
@@ -217,18 +275,16 @@ class Welcome {
 
         final generator = Generator(
           name: '${declaration.name}',
+          type: ref.read(configProviderProvider).type,
           optionalParameters: optionalParameters,
           requiredParameters: requiredParameters,
-          type: ref.read(configProviderProvider).type,
-        ).gen();
+        );
 
         final formatter = DartFormatter(
           languageVersion: DartFormatter.latestLanguageVersion,
         );
 
-        outputController.text = formatter.format(
-          '${generator.accept(emitter)}',
-        );
+        outputController.text = formatter.format(generator.generate());
         setState(() {});
       }
     }
