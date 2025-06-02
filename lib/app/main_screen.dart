@@ -213,12 +213,15 @@ class Welcome {
     final result = parseString(content: content);
     final unit = result.unit;
 
-    final optionalParameters = <Parameter>[];
-    final requiredParameters = <Parameter>[];
-
-    final parameters = <String, String>{};
+    outputController.text = '';
+    setState(() {});
 
     for (final declaration in unit.declarations) {
+      final optionalParameters = <Parameter>[];
+      final requiredParameters = <Parameter>[];
+
+      final parameters = <String, String>{};
+
       if (declaration is ClassDeclaration) {
         final fields = declaration.members.whereType<FieldDeclaration>();
         for (final member in fields) {
@@ -248,8 +251,9 @@ class Welcome {
                 defaultValue = param.defaultValue?.toSource();
 
                 if (!parameters.containsKey(name)) {
+                  final childEntities = param.parameter.childEntities;
                   parameters[name] =
-                      '${param.parameter.childEntities.elementAt(param.isRequired ? 1 : 0)}';
+                      '${childEntities.elementAt(param.isRequired ? 1 : 0)}';
                 }
               }
 
@@ -284,7 +288,7 @@ class Welcome {
           languageVersion: DartFormatter.latestLanguageVersion,
         );
 
-        outputController.text = formatter.format(generator.generate());
+        outputController.text += formatter.format(generator.generate());
         setState(() {});
       }
     }
