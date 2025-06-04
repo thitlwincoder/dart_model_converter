@@ -1,4 +1,4 @@
-import 'package:dart_model_converter/app/main_screen.dart';
+import 'package:dart_model_converter/app/code_type.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'config_provider.g.dart';

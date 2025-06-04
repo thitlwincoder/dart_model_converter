@@ -16,6 +16,8 @@ Transforming Dart models effortlessly, empowering your development.
 - Dart Class
 - JsonSerializable
 - Freezed
+- Hive
+- ObjectBox
 
 ## Overview
 

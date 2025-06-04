@@ -6,13 +6,15 @@ Class getJsonSerializableGenerate({
   required List<Parameter> optionalParameters,
   required List<Parameter> requiredParameters,
 }) {
+  final parameters = [...optionalParameters, ...requiredParameters];
+
   return Class(
     (b) => b
       ..name = name
       ..docs.add("part '${name.toSnakeCase()}.g.dart';")
       ..annotations.add(CodeExpression(Code('JsonSerializable()')))
-      ..fields.addAll([
-        ...optionalParameters.map((e) {
+      ..fields.addAll(
+        parameters.map((e) {
           return Field(
             (b) => b
               ..name = e.name
@@ -20,15 +22,7 @@ Class getJsonSerializableGenerate({
               ..modifier = FieldModifier.final$,
           );
         }),
-        ...requiredParameters.map(
-          (e) => Field(
-            (b) => b
-              ..name = e.name
-              ..type = e.type
-              ..modifier = FieldModifier.final$,
-          ),
-        ),
-      ])
+      )
       ..constructors.addAll([
         Constructor(
           (b) => b
