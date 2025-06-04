@@ -20,6 +20,12 @@ class Detector {
         )) {
           return CodeType.jsonSerializable;
         }
+
+        if (declaration.metadata.any(
+          (e) => e.name.name.toLowerCase().contains('hive'),
+        )) {
+          return CodeType.hive;
+        }
       }
     }
 

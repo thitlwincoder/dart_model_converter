@@ -1,8 +1,10 @@
 import 'package:analyzer/dart/analysis/utilities.dart';
-import 'package:analyzer/dart/ast/ast.dart';
-import 'package:code_builder/code_builder.dart';
 import 'package:dart_model_converter/app/generators/generator.dart';
 import 'package:dart_model_converter/app/parsers/detector.dart';
+import 'package:dart_model_converter/app/parsers/freezed_parser.dart';
+import 'package:dart_model_converter/app/parsers/hive_parser.dart';
+import 'package:dart_model_converter/app/parsers/json_serializable_parser.dart';
+import 'package:dart_model_converter/app/parsers/normal_parser.dart';
 import 'package:dart_model_converter/app/providers/config_provider.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,11 +18,13 @@ import 'package:url_launcher/url_launcher_string.dart';
 enum CodeType {
   normal,
   freezed,
-  jsonSerializable;
+  jsonSerializable,
+  hive;
 
   bool get isNormal => this == normal;
   bool get isFreezed => this == freezed;
   bool get isJsonSerializable => this == jsonSerializable;
+  bool get isHive => this == hive;
 }
 
 class MainScreen extends ConsumerStatefulWidget {
@@ -95,6 +99,16 @@ class Welcome {
   final List<String> instructions;
 
   Map<String, dynamic> toJson() => _$WelcomeToJson(this);
+}
+''';
+  String hiveInput = '''
+@HiveType(typeId: 1)
+class Welcome extends HiveObject {
+  @HiveField(0)
+  String greeting;
+
+  @HiveField(1)
+  List<String> instructions;
 }
 ''';
 
@@ -211,86 +225,33 @@ class Welcome {
     final currentType = Detector().detect(content);
 
     final result = parseString(content: content);
-    final unit = result.unit;
 
     outputController.text = '';
     setState(() {});
 
-    for (final declaration in unit.declarations) {
-      final optionalParameters = <Parameter>[];
-      final requiredParameters = <Parameter>[];
+    final unit = result.unit;
 
-      final parameters = <String, String>{};
+    final parser = switch (currentType) {
+      CodeType.normal => NormalParser(),
+      CodeType.freezed => FreezedParser(),
+      CodeType.jsonSerializable => JsonSerializableParser(),
+      CodeType.hive => HiveParser(),
+    };
 
-      if (declaration is ClassDeclaration) {
-        final fields = declaration.members.whereType<FieldDeclaration>();
-        for (final member in fields) {
-          for (final variable in member.fields.variables) {
-            final name = variable.name;
-            final type = member.fields.type;
+    for (final e in parser.parse(unit)) {
+      final generator = Generator(
+        name: e.name,
+        type: ref.read(configProviderProvider).type,
+        optionalParameters: e.optionalParameters,
+        requiredParameters: e.requiredParameters,
+      );
 
-            parameters['$name'] = '$type';
-          }
-        }
+      final formatter = DartFormatter(
+        languageVersion: DartFormatter.latestLanguageVersion,
+      );
 
-        for (final member in declaration.members) {
-          if (member is ConstructorDeclaration) {
-            final name = '${member.name}';
-            if (name != 'null') continue;
-
-            for (final param in member.parameters.parameters) {
-              final name = '${param.name}';
-
-              if (!parameters.containsKey(name) && currentType.isNormal) {
-                continue;
-              }
-
-              String? defaultValue;
-
-              if (param is DefaultFormalParameter) {
-                defaultValue = param.defaultValue?.toSource();
-
-                if (!parameters.containsKey(name)) {
-                  final childEntities = param.parameter.childEntities;
-                  parameters[name] =
-                      '${childEntities.elementAt(param.isRequired ? 1 : 0)}';
-                }
-              }
-
-              final parameter = Parameter(
-                (b) => b
-                  ..name = name
-                  ..named = param.isNamed
-                  ..type = Reference(parameters[name])
-                  ..required = param.isRequiredNamed
-                  ..defaultTo = defaultValue == null
-                      ? null
-                      : Code(defaultValue),
-              );
-
-              if (param.isNamed) {
-                optionalParameters.add(parameter);
-              } else {
-                requiredParameters.add(parameter);
-              }
-            }
-          }
-        }
-
-        final generator = Generator(
-          name: '${declaration.name}',
-          type: ref.read(configProviderProvider).type,
-          optionalParameters: optionalParameters,
-          requiredParameters: requiredParameters,
-        );
-
-        final formatter = DartFormatter(
-          languageVersion: DartFormatter.latestLanguageVersion,
-        );
-
-        outputController.text += formatter.format(generator.generate());
-        setState(() {});
-      }
+      outputController.text += formatter.format(generator.generate());
+      setState(() {});
     }
   }
 
