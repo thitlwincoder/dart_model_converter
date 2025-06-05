@@ -1,5 +1,6 @@
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_model_converter/app/code_type.dart';
+import 'package:dart_model_converter/app/generators/floor_class.dart';
 import 'package:dart_model_converter/app/generators/freezed_class.dart';
 import 'package:dart_model_converter/app/generators/hive_class.dart';
 import 'package:dart_model_converter/app/generators/json_serializable_class.dart';

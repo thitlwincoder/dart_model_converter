@@ -5,33 +5,26 @@ import 'package:dart_model_converter/app/code_type.dart';
 class Detector {
   CodeType detect(String content) {
     final result = parseString(content: content);
-    final unit = result.unit;
 
-    for (final declaration in unit.declarations) {
+    for (final declaration in result.unit.declarations) {
+      bool metadata(String pattern, {bool lowerCase = false}) {
+        return declaration.metadata.any((e) {
+          var name = e.name.name;
+          if (lowerCase) name = name.toLowerCase();
+          return name.contains(pattern);
+        });
+      }
+
       if (declaration is ClassDeclaration) {
-        if (declaration.metadata.any(
-          (e) => e.name.name.toLowerCase().contains('freezed'),
-        )) {
-          return CodeType.freezed;
-        }
+        if (metadata('freezed', lowerCase: true)) return CodeType.freezed;
 
-        if (declaration.metadata.any(
-          (e) => e.name.name.toLowerCase().contains('jsonserializable'),
-        )) {
-          return CodeType.jsonSerializable;
-        }
+        if (metadata('JsonSerializable')) return CodeType.jsonSerializable;
 
-        if (declaration.metadata.any(
-          (e) => e.name.name.toLowerCase().contains('hive'),
-        )) {
-          return CodeType.hive;
-        }
+        if (metadata('HiveType')) return CodeType.hive;
 
-        if (declaration.metadata.any(
-          (e) => e.name.name.toLowerCase().contains('entity'),
-        )) {
-          return CodeType.objectbox;
-        }
+        if (metadata('Entity')) return CodeType.objectbox;
+
+        if (metadata('entity')) return CodeType.floor;
       }
     }
 

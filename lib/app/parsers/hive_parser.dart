@@ -1,8 +1,9 @@
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:code_builder/code_builder.dart';
 import 'package:dart_model_converter/app/parsers/parser.dart';
+import 'package:dart_model_converter/app/parsers/parser_base.dart';
 
-class HiveParser extends Parser {
+class HiveParser extends ParserBase {
   @override
   List<ParseData> parse(CompilationUnit unit) {
     final result = <ParseData>[];

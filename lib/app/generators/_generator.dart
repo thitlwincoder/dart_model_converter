@@ -21,6 +21,7 @@ class _Generator implements Generator {
       CodeType.jsonSerializable => _getJsonSerializableGenerate(),
       CodeType.hive => _getHiveClass(),
       CodeType.objectbox => _getObjectBoxClass(),
+      CodeType.floor => _getFloorClass(),
     };
 
     return '${out.accept(DartEmitter())}';
@@ -51,6 +52,12 @@ class _Generator implements Generator {
   );
 
   Class _getObjectBoxClass() => getObjectBoxClass(
+    name: name,
+    optionalParameters: optionalParameters,
+    requiredParameters: requiredParameters,
+  );
+
+  Class _getFloorClass() => getFloorClass(
     name: name,
     optionalParameters: optionalParameters,
     requiredParameters: requiredParameters,

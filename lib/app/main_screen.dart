@@ -2,11 +2,7 @@ import 'package:analyzer/dart/analysis/utilities.dart';
 import 'package:dart_model_converter/app/code_type.dart';
 import 'package:dart_model_converter/app/generators/generator.dart';
 import 'package:dart_model_converter/app/parsers/detector.dart';
-import 'package:dart_model_converter/app/parsers/freezed_parser.dart';
-import 'package:dart_model_converter/app/parsers/hive_parser.dart';
-import 'package:dart_model_converter/app/parsers/json_serializable_parser.dart';
-import 'package:dart_model_converter/app/parsers/normal_parser.dart';
-import 'package:dart_model_converter/app/parsers/object_box_parser.dart';
+import 'package:dart_model_converter/app/parsers/parser.dart';
 import 'package:dart_model_converter/app/providers/config_provider.dart';
 import 'package:dart_style/dart_style.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -16,7 +12,6 @@ import 'package:re_highlight/styles/atom-one-dark.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:shadcn_flutter/shadcn_flutter_extension.dart';
 import 'package:url_launcher/url_launcher_string.dart';
-
 
 class MainScreen extends ConsumerStatefulWidget {
   const MainScreen({super.key});
@@ -220,17 +215,7 @@ class Welcome extends HiveObject {
     outputController.text = '';
     setState(() {});
 
-    final unit = result.unit;
-
-    final parser = switch (currentType) {
-      CodeType.normal => NormalParser(),
-      CodeType.freezed => FreezedParser(),
-      CodeType.jsonSerializable => JsonSerializableParser(),
-      CodeType.hive => HiveParser(),
-      CodeType.objectbox => ObjectBoxParser(),
-    };
-
-    for (final e in parser.parse(unit)) {
+    for (final e in Parser(currentType).parse(result.unit)) {
       final generator = Generator(
         name: e.name,
         type: ref.read(configProviderProvider).type,

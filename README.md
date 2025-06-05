@@ -18,6 +18,7 @@ Transforming Dart models effortlessly, empowering your development.
 - Freezed
 - Hive
 - ObjectBox
+- Floor
 
 ## Overview
 
