@@ -22,6 +22,7 @@ class _Generator implements Generator {
       CodeType.hive => _getHiveClass(),
       CodeType.objectbox => _getObjectBoxClass(),
       CodeType.floor => _getFloorClass(),
+      CodeType.realm => _getRealmClass(),
     };
 
     return '${out.accept(DartEmitter())}';
@@ -58,6 +59,12 @@ class _Generator implements Generator {
   );
 
   Class _getFloorClass() => getFloorClass(
+    name: name,
+    optionalParameters: optionalParameters,
+    requiredParameters: requiredParameters,
+  );
+
+  Class _getRealmClass() => getRealmClass(
     name: name,
     optionalParameters: optionalParameters,
     requiredParameters: requiredParameters,

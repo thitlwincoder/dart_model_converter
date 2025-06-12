@@ -20,9 +20,10 @@ dependencies:
   re_editor: ^0.7.0
   re_highlight: ^0.0.3
   flutter_riverpod: ^2.6.1
+  collection: ^1.19.1
 
 dev_dependencies:
-  very_good_analysis: ^7.0.0
+  very_good_analysis: ^9.0.0
   build_runner: ^2.4.13
   riverpod_generator: ^2.6.3
 

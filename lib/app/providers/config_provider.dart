@@ -15,7 +15,7 @@ class ConfigProvider extends _$ConfigProvider {
 }
 
 class Config {
-  Config({this.type = CodeType.freezed});
+  Config({this.type = CodeType.realm});
 
   CodeType type;
 }

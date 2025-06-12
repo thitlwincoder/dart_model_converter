@@ -1,1 +1,9 @@
-enum CodeType { normal, freezed, jsonSerializable, hive, objectbox, floor }
+enum CodeType {
+  normal,
+  freezed,
+  jsonSerializable,
+  hive,
+  objectbox,
+  floor,
+  realm,
+}

@@ -7,6 +7,7 @@ import 'package:dart_model_converter/app/parsers/hive_parser.dart';
 import 'package:dart_model_converter/app/parsers/json_serializable_parser.dart';
 import 'package:dart_model_converter/app/parsers/normal_parser.dart';
 import 'package:dart_model_converter/app/parsers/object_box_parser.dart';
+import 'package:dart_model_converter/app/parsers/realm_parser.dart';
 
 part '_parser.dart';
 

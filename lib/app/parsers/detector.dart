@@ -25,6 +25,8 @@ class Detector {
         if (metadata('Entity')) return CodeType.objectbox;
 
         if (metadata('entity')) return CodeType.floor;
+
+        if (metadata('RealmModel')) return CodeType.realm;
       }
     }
 

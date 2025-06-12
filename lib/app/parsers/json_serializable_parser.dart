@@ -12,7 +12,7 @@ class JsonSerializableParser extends ParserBase {
       final optionalParameters = <Parameter>[];
       final requiredParameters = <Parameter>[];
 
-      var parameters = <String, String>{};
+      var parameters = <ParseFieldData>[];
 
       if (declaration is ClassDeclaration) {
         parameters = parseFields(declaration);
@@ -28,7 +28,7 @@ class JsonSerializableParser extends ParserBase {
               final parameter = parseParameter(
                 name: name,
                 param: param,
-                parameters: parameters,
+                type: getTypeByName(name, parameters),
                 defaultValue: getDefaultValue(param),
               );
 

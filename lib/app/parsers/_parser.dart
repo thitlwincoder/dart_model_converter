@@ -14,6 +14,7 @@ class _Parser implements Parser {
       CodeType.hive => HiveParser(),
       CodeType.objectbox => ObjectBoxParser(),
       CodeType.floor => FloorParser(),
+      CodeType.realm => RealmParser(),
     };
 
     return parser.parse(unit);

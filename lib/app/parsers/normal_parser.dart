@@ -12,7 +12,7 @@ class NormalParser extends ParserBase {
       final optionalParameters = <Parameter>[];
       final requiredParameters = <Parameter>[];
 
-      var parameters = <String, String>{};
+      var parameters = <ParseFieldData>[];
 
       if (declaration is ClassDeclaration) {
         parameters = parseFields(declaration);
@@ -28,8 +28,8 @@ class NormalParser extends ParserBase {
               final parameter = parseParameter(
                 name: name,
                 param: param,
-                parameters: parameters,
                 defaultValue: getDefaultValue(param),
+                type: getTypeByName(name, parameters),
               );
 
               if (param.isNamed) {

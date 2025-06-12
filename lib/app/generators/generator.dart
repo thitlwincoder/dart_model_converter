@@ -6,6 +6,7 @@ import 'package:dart_model_converter/app/generators/hive_class.dart';
 import 'package:dart_model_converter/app/generators/json_serializable_class.dart';
 import 'package:dart_model_converter/app/generators/normal_class.dart';
 import 'package:dart_model_converter/app/generators/object_box_class.dart';
+import 'package:dart_model_converter/app/generators/realm_class.dart';
 
 part '_generator.dart';
 

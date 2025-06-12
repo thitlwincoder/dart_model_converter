@@ -36,7 +36,7 @@ class FreezedParser extends ParserBase {
               final parameter = parseParameter(
                 name: name,
                 param: param,
-                parameters: parameters,
+                type: parameters[name],
                 defaultValue: defaultValue,
               );
 
