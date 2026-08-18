@@ -5,26 +5,13 @@ import 'package:dart_model_converter/app/parsers/parser_base.dart';
 class RealmParser extends ParserBase {
   @override
   List<ParseData> parse(CompilationUnit unit) {
-    final result = <ParseData>[];
-
-    for (final declaration in unit.declarations) {
-      if (declaration is ClassDeclaration) {
-        result.add(
-          ParseData(
-            requiredParameters: [],
-            name: '${declaration.name}'.replaceFirst('_', ''),
-            optionalParameters: parseParametersByFields(
-              declaration,
-              defaultValue: (variable) {
-                if (variable.equals == null) return null;
-                return '${variable.endToken}';
-              },
-            ),
-          ),
-        );
-      }
-    }
-
-    return result;
+    return parseClassesByFields(
+      unit,
+      className: (declaration) => '${declaration.name}'.replaceFirst('_', ''),
+      defaultValue: (variable) {
+        if (variable.equals == null) return null;
+        return '${variable.endToken}';
+      },
+    );
   }
 }
