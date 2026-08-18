@@ -1,42 +1,97 @@
 # Dart Model Converter
-Transforming Dart models effortlessly, empowering your development.
 
-[![Last Commits](https://img.shields.io/github/last-commit/thitlwincoder/dart_model_converter?logo=git&logoColor=white)](https://github.com/thitlwincoder)
-[![License](https://img.shields.io/github/license/thitlwincoder/dart_model_converter?logo=open-source-initiative&logoColor=green)](https://github.com/thitlwincoder/dart_model_converter/blob/master/LICENSE)
-[![Uploaded By](https://img.shields.io/badge/uploaded%20by-thitlwincoder-blue)](https://github.com/thitlwincoder)
+Dart Model Converter is a browser-based tool for converting Dart model classes between common data-modeling styles used in Flutter and Dart applications.
 
-<img src="screenshot.png" alt="screenshot" width="500"/>
+[![Last commit](https://img.shields.io/github/last-commit/thitlwincoder/dart_model_converter?logo=git&logoColor=white)](https://github.com/thitlwincoder/dart_model_converter/commits/main)
+[![License](https://img.shields.io/github/license/thitlwincoder/dart_model_converter?logo=open-source-initiative&logoColor=green)](https://github.com/thitlwincoder/dart_model_converter/blob/main/LICENSE)
+[![GitHub Pages](https://img.shields.io/badge/demo-GitHub%20Pages-blue)](https://thitlwincoder.github.io/dart_model_converter/)
 
-## Table of Contents
-- [Overview](#overview)
-- [Usage](#usage)
-
-## Support Classes
-
-- Dart Class
-- JsonSerializable
-- Freezed
-- Hive
-- ObjectBox
-- Floor
+<img src="screenshot.png" alt="Dart Model Converter screenshot" width="640" />
 
 ## Overview
 
-Dart Model Converter is a powerful tool designed to simplify the conversion of Dart classes.
+Model classes often need to be rewritten when a project changes its persistence, serialization, or code-generation approach. Dart Model Converter parses an input Dart class and generates equivalent model code for another supported style.
 
-### Why dart_model_converter ?
+Use it to quickly migrate or prototype models for serialization libraries, local databases, and object stores without manually rewriting constructors, fields, annotations, and JSON helpers.
 
-This project steamlines the process of model creation and serialization, making it easier for developers to manage data structures. The core features include:
+## Supported formats
 
-- 🛠️ <b>Real-time Code Editing</b>: Provides an intuitive interface for inputting Dart class definitions with immediate conversion feedback.
-- 🤝 <b>Community-Driven Development</b>: Encourages contributions, fostering collaboration and continuous improvement.
+Dart Model Converter currently supports:
+
+- Plain Dart classes
+- `json_serializable`
+- `freezed`
+- Hive
+- ObjectBox
+- Floor
+- Realm
+
+## Features
+
+- Parse Dart model declarations directly in the browser.
+- Detect the source model style from common annotations.
+- Generate formatted Dart output with `dart_style`.
+- Preserve constructor parameter structure where supported.
+- Preserve required, optional, and default constructor values where supported.
+- Generate library-specific annotations such as primary key metadata.
 
 ## Usage
 
-Try [dart_model_converter](https://thitlwincoder.github.io/dart_model_converter/) in your browser.
+Open the web app:
 
-## Contribution
+[https://thitlwincoder.github.io/dart_model_converter/](https://thitlwincoder.github.io/dart_model_converter/)
 
-Feel free to file an [issue](https://github.com/thitlwincoder/dart_model_converter/issues/new) if you find a problem or make pull requests.
+Then:
 
-All contributions are welcome :)
+1. Paste a Dart model class into the input editor.
+2. Select the target output format.
+3. Copy the generated Dart model code.
+
+## Development
+
+Install dependencies:
+
+```sh
+flutter pub get
+```
+
+Run the app locally:
+
+```sh
+flutter run
+```
+
+Run static analysis:
+
+```sh
+flutter analyze
+```
+
+Run tests:
+
+```sh
+flutter test
+```
+
+Build the web app:
+
+```sh
+flutter build web --release
+```
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+Before opening a pull request, run:
+
+```sh
+flutter analyze
+flutter test
+```
+
+Report bugs or request features in the [GitHub issue tracker](https://github.com/thitlwincoder/dart_model_converter/issues/new).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
